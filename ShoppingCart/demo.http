@@ -1,0 +1,17 @@
+POST http://localhost:5000/shoppingcart/14
+Accept: application/json
+Content-Type: application/json
+
+[
+    {"Name": "shirt"},
+    {"Name": "pants"}
+]
+
+#####
+
+GET http://localhost:5000/shoppingcart/14
+Accept: application/json
+
+#####
+
+DELETE  http://localhost:5000/shoppingcart/14
