@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Marten;
 using Nancy;
 using Nancy.ModelBinding;
 
@@ -7,33 +8,41 @@ namespace ShoppingCart
 {
     public class Cart : NancyModule
     {
-        private static Dictionary<int, IEnumerable<Product>> carts = new Dictionary<int, IEnumerable<Product>>();
 
-        public Cart() : base("/shoppingcart")
+        public Cart(IDocumentStore documentStore) : base("/shoppingcart")
         {
-            Get("/{userId:int}", parameters =>
+            Get("/{userId:int}", async parameters =>
             {
                 int userId = parameters.userId;
-                if (!carts.ContainsKey(userId))
-                    return HttpStatusCode.NotFound;
-                return carts[userId];
+                using (var session = documentStore.LightweightSession())
+                {
+                    var cart = await session.LoadAsync<ShoppingCart>(userId);
+                    return cart ?? (object) HttpStatusCode.NotFound;
+                }
             });
 
-            Post("/{userId:int}", parameters =>
+            Post("/{userId:int}", async parameters =>
             {
                 int userId = parameters.userId;
-                if (!carts.ContainsKey(userId))
-                    carts[userId] = Enumerable.Empty<Product>();
                 IEnumerable<Product> products = this.Bind();
-                carts[userId] = carts[userId].Concat(products);
-                return carts[userId];
+                using (var session = documentStore.LightweightSession())
+                {
+                    var cart = await session.LoadAsync<ShoppingCart>(userId) ?? new ShoppingCart { Id = userId, Products = new List<Product>()};
+                    cart.Products.AddRange(products);
+                    session.Store(cart);
+                    await session.SaveChangesAsync();
+                    return cart;
+                }
             });
 
-            Delete("/{userid}", parameters => 
+            Delete("/{userid}", async parameters => 
             {
-                int userId = parameters.userId;
-                if (carts.ContainsKey(userId))
-                    carts.Remove(userId);
+                using (var session = documentStore.LightweightSession())
+                {
+                    session.Delete<ShoppingCart>((int) parameters.userId);
+                    await session.SaveChangesAsync();
+                }
+
                 return HttpStatusCode.NoContent;
             });
         }
@@ -42,5 +51,11 @@ namespace ShoppingCart
     public class Product
     {
         public string Name { get; set;}
+    }
+
+    public class ShoppingCart
+    {
+        public int Id;
+        public List<Product> Products { get; set; }
     }
 }
