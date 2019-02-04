@@ -5,6 +5,7 @@ using Nancy;
 using Nancy.Configuration;
 using Nancy.Owin;
 using Nancy.TinyIoc;
+using StatsdClient;
 
 namespace ShoppingCart
 {
@@ -12,6 +13,20 @@ namespace ShoppingCart
     {
         public void Configure(IApplicationBuilder app)
         {
+            Metrics.Configure(new MetricsConfig
+            {
+                StatsdServerName = "localhost",
+                StatsdServerPort = 8125,
+                Prefix = "ShoppingCart"
+            });
+
+            app.Use(next => async ctx =>     
+            {
+                using (Metrics.StartTimer(ctx.Request.Method))
+                {
+                    await next(ctx);
+                }
+            });
             app.UseOwin().UseNancy();
         }
     }
