@@ -9,15 +9,20 @@ services:
       environment:
         POSTGRES_PASSWORD: mysecretpassword
   pgadmin:
-    image: dpage/pgadmin4
-    ports:
-      - "3000:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "guest@guest.com"
-      PGADMIN_DEFAULT_PASSWORD: secret
+      image: dpage/pgadmin4
+      ports:
+        - "3000:80"
+      environment:
+        PGADMIN_DEFAULT_EMAIL: "guest@guest.com"
+        PGADMIN_DEFAULT_PASSWORD: secret
   elk:
       image: sebp/elk
       ports:
         - "5601:5601"
         - "9200:9200"
         - "5044:5044"
+  statsd:
+      image: kamon/grafana_graphite
+      ports:
+        - 4000:80
+        - 8125:8125/udp
