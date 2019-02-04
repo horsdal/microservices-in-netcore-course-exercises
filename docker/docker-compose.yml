@@ -5,8 +5,16 @@ services:
       image: postgres
       ports: 
         - "5432:5432"
+      hostname: postgres
       environment:
         POSTGRES_PASSWORD: mysecretpassword
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "3000:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "guest@guest.com"
+      PGADMIN_DEFAULT_PASSWORD: secret
   elk:
       image: sebp/elk
       ports:
