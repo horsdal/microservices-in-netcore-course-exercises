@@ -8,8 +8,7 @@ namespace ShoppingCart
 {
     public class Cart : NancyModule
     {
-
-        public Cart(IDocumentStore documentStore) : base("/shoppingcart")
+        public Cart(IDocumentStore documentStore, EventStore eventStore) : base("/shoppingcart")
         {
             Get("/{userId:int}", async parameters =>
             {
