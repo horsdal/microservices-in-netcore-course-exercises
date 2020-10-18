@@ -1,0 +1,10 @@
+GET https://localhost:5001/
+
+#####
+GET https://localhost:5001/notfound
+
+#####
+GET https://localhost:5001/greetme?name=christian
+
+#####
+GET https://localhost:5001/greetme/christian
