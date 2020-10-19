@@ -7,4 +7,7 @@ GET https://localhost:5001/notfound
 GET https://localhost:5001/greetme?name=christian
 
 #####
-GET https://localhost:5001/greetme/christian
+GET https://localhost:5001/greetme/Christian
+
+#####
+GET http://localhost:5000/greetme/Christian
