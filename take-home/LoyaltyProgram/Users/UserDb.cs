@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LoyaltyProgram.Users
 {
@@ -16,11 +18,16 @@ namespace LoyaltyProgram.Users
             LoyaltyProgramUser user)
             => RegisteredUsers[userId] = user;
 
-        private LoyaltyProgramUser RegisterUser(LoyaltyProgramUser user)
+        public LoyaltyProgramUser RegisterUser(LoyaltyProgramUser user)
         {
             var userId = RegisteredUsers.Count;
             var newUser = user with { Id = userId };
             return RegisteredUsers[userId] = user;
         }
+
+        public IEnumerable<LoyaltyProgramUser> LookUpByTag(string tag) =>
+            RegisteredUsers
+                .Values
+                .Where(u => u.Settings.Interests.Contains(tag));
     }
 }
