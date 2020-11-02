@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LoyaltyProgram.Users
 {
@@ -11,5 +12,20 @@ namespace LoyaltyProgram.Users
         {
             _db = db;
         }
+
+        [HttpGet("{userid:int}")]
+        public ActionResult<LoyaltyProgramUser> Get(int userId) =>
+            (ActionResult<LoyaltyProgramUser>) _db.GetUserById(userId) ?? NotFound();
+
+        [HttpPost("")]
+        public ActionResult<LoyaltyProgramUser> Create([FromBody] LoyaltyProgramUser user)
+        {
+            var registeredUser = _db.RegisterUser(user);
+            return Created(new Uri($"/users/{registeredUser.Id}", UriKind.Relative), registeredUser);
+        }
+
+        [HttpPut("{userid:int}")]
+        public LoyaltyProgramUser Update(int userId, [FromBody] LoyaltyProgramUser user) =>
+            _db.UpdateUser(userId, user);
     }
 }
