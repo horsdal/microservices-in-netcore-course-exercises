@@ -1,4 +1,6 @@
-﻿namespace ApiGatewayMock
+﻿using System;
+
+namespace ApiGatewayMock
 {
   using System.Net.Http;
   using System.Text;
@@ -24,7 +26,17 @@
         Encoding.UTF8,
         "application/json");
 
-    public async Task<HttpResponseMessage> QueryUser(string arg) => await this.httpClient.GetAsync($"/users/{int.Parse(arg)}");
+    public async Task<HttpResponseMessage> QueryUser(string arg)
+    {
+      //if not in cache
+      var response = await this.httpClient.GetAsync($"/users/{int.Parse(arg)}");
+      var maxAge = response
+        ?.Headers
+        ?.CacheControl
+        ?.MaxAge ?? TimeSpan.Zero;
+      // put into cache with maxage ...
+      return response!;
+    }
 
     public async Task<HttpResponseMessage> UpdateUser(dynamic user) =>
       await this.httpClient.PutAsync($"/users/{user.Id}", CreateBody(user));

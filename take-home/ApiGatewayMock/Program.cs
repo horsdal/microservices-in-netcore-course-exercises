@@ -26,7 +26,7 @@ IAsyncPolicy<HttpResponseMessage> CircuitBreakerPolicy =
         .CircuitBreakerAsync(5, TimeSpan.FromMinutes(1));
 
 
-var host = args.Length > 0 ? args[0] : "https://localhost:6000";
+var host = args.Length > 0 ? args[0] : "http://localhost:6000";
 
 var services = new ServiceCollection();
 services.AddHttpClient<LoyaltyProgramClient>()
