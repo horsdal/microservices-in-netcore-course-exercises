@@ -10,6 +10,8 @@ using LoyaltyProgram.Users;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Polly;
+using Polly.Extensions.Http;
 
 namespace LoyaltyProgram.SpecialOffers
 {
@@ -19,7 +21,13 @@ namespace LoyaltyProgram.SpecialOffers
         private readonly IBus _bus;
         private readonly ILogger<SpecialOffersConsumer> _logger;
         private ISubscriptionResult _subscription;
-        private HttpClient _client;
+        private readonly HttpClient _client;
+
+        private static readonly IAsyncPolicy<HttpResponseMessage> ExponentialRetrypolicy =
+            Policy<HttpResponseMessage>
+                .Handle<HttpRequestException>()
+                .OrTransientHttpStatusCode()
+                .WaitAndRetryAsync(3, x => TimeSpan.FromMilliseconds(100 * Math.Pow(2, x)));
 
         public SpecialOffersConsumer(UserDb db, IBus bus, ILogger<SpecialOffersConsumer> logger)
         {
@@ -34,27 +42,25 @@ namespace LoyaltyProgram.SpecialOffers
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            async Task OnMessage(SpecialOfferCreated offer)
+            {
+                _logger.LogInformation("Received offer: {@SpecialOfferCreated}", offer);
+                var notifications = offer.SpecialOffer.FullDescription.Split()
+                    .SelectMany(w => _db.LookUpByTag(w))
+                    .Select(u =>
+                    {
+                        _logger.LogInformation("Send notification to {id}", u.Id);
+                        return
+                            ExponentialRetrypolicy.ExecuteAsync(() =>
+                                _client.PostAsync("/notifications", new StringContent(JsonConvert.SerializeObject(new {body = "Great Offer!", userId = u.Id.ToString()}), Encoding.UTF8, "application/json"))
+                        );
+                    });
+                var r = await Task.WhenAll(notifications);
+            }
+
             _subscription =
                 _bus.SubscribeAsync<SpecialOfferCreated>(nameof(SpecialOffersConsumer),
-                     async offer =>
-                    {
-                        _logger.LogInformation("Received offer: {@SpecialOfferCreated}", offer);
-                        var notifications = offer.SpecialOffer.FullDescription.Split()
-                            .SelectMany(w => _db.LookUpByTag(w))
-                            .Select(u =>
-                            {
-                                _logger.LogInformation("Send notification to {id}", u.Id);
-                                return _client.PostAsync(
-                                    "/notifications",
-                                    new StringContent(JsonConvert.SerializeObject(new
-                                        {
-                                            body = "Great Offer!", userId = u.Id.ToString()
-                                        }),
-                                        Encoding.UTF8,
-                                        "application/json"));
-                            });
-                        var r = await Task.WhenAll(notifications);
-                    });
+                     OnMessage);
             return Task.CompletedTask;
         }
 
