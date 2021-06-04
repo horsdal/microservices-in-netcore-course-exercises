@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using EasyNetQ;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace HelloMicorservices
+namespace HelloMicroservices
 {
     public class Startup
     {
@@ -17,7 +12,9 @@ namespace HelloMicorservices
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IBus>(RabbitHutch.CreateBus("host=localhost"));
+            var bus = RabbitHutch.CreateBus("host=localhost");
+            services.AddSingleton(bus);
+            services.AddSingleton(bus.PubSub);
             services.AddMvcCore();
         }
 

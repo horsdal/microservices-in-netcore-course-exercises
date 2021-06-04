@@ -1,14 +1,15 @@
+using System.Threading;
 using System.Threading.Tasks;
 using EasyNetQ;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HelloMicorservices
+namespace HelloMicroservices
 {
     public class HelloController : Controller
     {
-        private readonly IBus _bus;
+        private readonly IPubSub _bus;
 
-        public HelloController(IBus bus)
+        public HelloController(IPubSub bus)
         {
             _bus = bus;
         }
