@@ -50,7 +50,7 @@
         .ConfigureHttpClient(c => c.BaseAddress = new Uri(host));
       var serviceProvider = services.BuildServiceProvider();
 
-      this.client = serviceProvider.GetService<LoyaltyProgramClient>();
+      this.client = serviceProvider.GetService<LoyaltyProgramClient>() ?? throw new NullReferenceException($"Must register {nameof(LoyaltyProgramClient)} in service collection");
       this.processCommand =
         new Dictionary<char, (string description, Func<string, Task<(bool, HttpResponseMessage)>> handler)>
         {
@@ -111,7 +111,7 @@
         foreach (var c in this.processCommand.Values)
           WriteLine(c.description);
         WriteLine("********************");
-        var cmd = ReadLine();
+        var cmd = ReadLine() ?? "";
         if (this.processCommand.TryGetValue(cmd[0], out var command))
         {
           var (@continue, response) = await command.handler(cmd);

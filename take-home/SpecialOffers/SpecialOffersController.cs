@@ -12,9 +12,9 @@ namespace SpecialOffers
     public class SpecialOffersController : Controller
     {
         private static IList<SpecialOffer> _offers = new List<SpecialOffer>();
-        private readonly IBus _bus;
+        private readonly IPubSub _bus;
 
-        public SpecialOffersController(IBus bus)
+        public SpecialOffersController(IPubSub bus)
         {
             _bus = bus;
         }

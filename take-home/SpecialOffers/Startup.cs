@@ -9,9 +9,12 @@ namespace SpecialOffers
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            var bus = RabbitHutch.CreateBus("host=rabbitmq");
+// Use this line when running outside docker:
+// var bus = RabbitHutch.CreateBus("host=localhost");
             services
-// Use this line when running outside docker:                .AddSingleton(RabbitHutch.CreateBus("host=localhost"))
-                .AddSingleton(RabbitHutch.CreateBus("host=rabbitmq"))
+                .AddSingleton(bus)
+                .AddSingleton(bus.PubSub)
                 .AddMvcCore();
             services.AddControllers();
             services.AddSwaggerGen();
