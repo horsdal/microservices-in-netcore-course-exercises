@@ -27,6 +27,6 @@
     public async Task<HttpResponseMessage> QueryUser(string arg) => await this.httpClient.GetAsync($"/users/{int.Parse(arg)}");
 
     public async Task<HttpResponseMessage> UpdateUser(dynamic user) =>
-      await this.httpClient.PutAsync($"/users/{user.id}", CreateBody(user));
+      await this.httpClient.PutAsync($"/users/{user.Id}", CreateBody(user));
   }
 }
