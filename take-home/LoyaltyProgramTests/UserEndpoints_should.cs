@@ -29,7 +29,7 @@ namespace LoyaltyProgramTests
         [Fact]
         public async Task allow_registering_user()
         {
-            var newuser = new LoyaltyProgramUser {Name = "Foo", LoyaltyPoints = 42};
+            var newuser = new LoyaltyProgramUser(Id: 0, Name: "Foo", LoyaltyPoints: 42, Settings: default);
             var actual = await _sut.PostAsync(
                 "/users",
                 new StringContent(JsonConvert.SerializeObject(newuser), Encoding.UTF8, "application/json"));
