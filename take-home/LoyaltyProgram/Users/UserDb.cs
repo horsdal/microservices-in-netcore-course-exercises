@@ -19,7 +19,7 @@ namespace LoyaltyProgram.Users
         private LoyaltyProgramUser RegisterUser(LoyaltyProgramUser user)
         {
             var userId = RegisteredUsers.Count;
-            user.Id = userId;
+            var newUser = user with { Id = userId };
             return RegisteredUsers[userId] = user;
         }
     }
