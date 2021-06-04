@@ -2,8 +2,8 @@
 {
   using System.Net.Http;
   using System.Text;
+  using System.Text.Json;
   using System.Threading.Tasks;
-  using Newtonsoft.Json;
 
   public class LoyaltyProgramClient
   {
@@ -20,7 +20,7 @@
 
     private static StringContent CreateBody(object user) =>
       new StringContent(
-        JsonConvert.SerializeObject(user),
+        JsonSerializer.Serialize(user),
         Encoding.UTF8,
         "application/json");
 

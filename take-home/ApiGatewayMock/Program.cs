@@ -1,4 +1,6 @@
-﻿namespace ApiGatewayMock
+﻿using System.Text.Json;
+
+namespace ApiGatewayMock
 {
   using System;
   using System.Collections.Generic;
@@ -6,12 +8,8 @@
   using System.Net.Http;
   using System.Threading.Tasks;
   using Microsoft.Extensions.DependencyInjection;
-  using Microsoft.Extensions.Http;
-  using Newtonsoft.Json;
-  using Newtonsoft.Json.Linq;
   using Polly;
   using Polly.Extensions.Http;
-  using Polly.Retry;
   using static System.Console;
   using static System.Environment;
 
@@ -82,16 +80,15 @@
         var response = await this.client.QueryUser(cmd.Split(' ').Skip(1).First());
         if (!response.IsSuccessStatusCode) 
           return (true, response);
-        
-        var user = JsonConvert.DeserializeAnonymousType(await response.Content.ReadAsStringAsync(),
-          new {name = "", id = 0, loyaltyPoints = 0, settings = new {interests = new string[0]}});
+
+        var user = JsonSerializer.Deserialize<LoyaltyProgramUser>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
         var newInterests = cmd.Substring(cmd.IndexOf(' ', 2)).Split(',').Select(i => i.Trim());
         var res = await this.client.UpdateUser(new
         {
-          user.name,
-          user.id,
-          user.loyaltyPoints,
-          settings = new {interests = user.settings.interests.Concat(newInterests).ToArray()}
+          user.Name,
+          user.Id,
+          user.LoyaltyPoints,
+          settings = new {interests = user.Settings.Interests.Concat(newInterests).ToArray()}
         });
         return (true, res);
 
@@ -128,7 +125,12 @@
       WriteLine($"status code: {response.StatusCode}");
       WriteLine("Headers: " + response.Headers.Aggregate("",
         (acc, h) => $"{acc}{NewLine}\t{h.Key}: {h.Value.Aggregate((hAcc, hVal)=> $"{hAcc}{hVal}, ")}") ?? "");
-      WriteLine($"Body:{NewLine}{JToken.Parse(await response.Content.ReadAsStringAsync())}");
+      WriteLine($"Body:{NewLine}{JsonSerializer.Serialize(JsonDocument.Parse(await response.Content.ReadAsStringAsync()), new JsonSerializerOptions { WriteIndented = true })}");
     }
   }
+
+  public record LoyaltyProgramSettings(string[] Interests);
+
+  public record LoyaltyProgramUser(int Id, string Name, int LoyaltyPoints, LoyaltyProgramSettings Settings);
+
 }
