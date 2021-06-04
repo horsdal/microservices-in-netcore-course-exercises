@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Enrichers.Span;
+using Serilog.Formatting.Json;
 
 namespace LoyaltyProgram
 {
@@ -13,7 +15,17 @@ namespace LoyaltyProgram
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(x => x.SetMinimumLevel(LogLevel.Debug).AddConsole())
+                .UseSerilog((context, logger) =>
+                {
+                    logger
+                        .Enrich.FromLogContext()
+                        .Enrich.WithSpan();
+                    if (context.HostingEnvironment.IsDevelopment())
+                        logger.WriteTo.ColoredConsole(
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {TraceId} {Level:u3} {Message}{NewLine}{Exception}");
+                    else
+                        logger.WriteTo.Console(new JsonFormatter());
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

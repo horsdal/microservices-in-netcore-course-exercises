@@ -9,11 +9,11 @@ namespace LoyaltyProgram.SpecialOffers
 {
     public class SpecialOffersConsumer : IHostedService
     {
-        private readonly IBus _bus;
+        private readonly IPubSub _bus;
         private readonly ILogger<SpecialOffersConsumer> _logger;
         private ISubscriptionResult _subscription;
 
-        public SpecialOffersConsumer(IBus bus, ILogger<SpecialOffersConsumer> logger)
+        public SpecialOffersConsumer(IPubSub bus, ILogger<SpecialOffersConsumer> logger)
         {
             _bus = bus;
             _logger = logger;

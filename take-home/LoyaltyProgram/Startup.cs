@@ -12,8 +12,10 @@ namespace LoyaltyProgram
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            var bus = RabbitHutch.CreateBus("host=localhost");
             services
-                .AddSingleton(RabbitHutch.CreateBus("host=localhost"))
+                .AddSingleton(bus)
+                .AddSingleton(bus.PubSub)
                 .AddSingleton(new UserDb())
                 .AddHostedService<SpecialOffersConsumer>()
                 .AddMvcCore();
