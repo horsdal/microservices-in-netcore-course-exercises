@@ -8,9 +8,9 @@ namespace HelloMicorservices
         public string SimpleGreet() => "Hello!";
 
         [HttpGet("/greetme")]
-        public string GreetMeFrom([FromQuery] string name) => $"Helle {name}";
+        public string GreetMeFrom([FromQuery] string name) => $"Hello {name}";
 
         [HttpGet("/greetme/{name}")]
-        public string GreetMePath(string name) => $"Helle {name}";
+        public string GreetMePath(string name) => $"Hello {name}";
        }
 }
