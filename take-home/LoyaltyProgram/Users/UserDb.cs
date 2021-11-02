@@ -22,7 +22,7 @@ namespace LoyaltyProgram.Users
         {
             var userId = RegisteredUsers.Count;
             var newUser = user with { Id = userId };
-            return RegisteredUsers[userId] = user;
+            return RegisteredUsers[userId] = newUser;
         }
 
         public IEnumerable<LoyaltyProgramUser> LookUpByTag(string tag) =>
