@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus;
 using Contracts.SpecialOffers;
-using EasyNetQ;
-using EasyNetQ.Topology;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SpecialOffers
@@ -12,24 +12,24 @@ namespace SpecialOffers
     public class SpecialOffersController : Controller
     {
         private static IList<SpecialOffer> _offers = new List<SpecialOffer>();
-        private readonly IPubSub _bus;
+        private readonly ServiceBusSender _busMessageSender;
 
-        public SpecialOffersController(IPubSub bus)
+        public SpecialOffersController(ServiceBusClient bus)
         {
-            _bus = bus;
+            _busMessageSender = bus.CreateSender(nameof(SpecialOfferCreated));
         }
 
         [HttpPost("")]
         public Task CreateSpecialOffer([FromBody] SpecialOffer newOffer)
         {
             _offers.Add(newOffer);
-            return _bus.PublishAsync(
-                new SpecialOfferCreated
-                {
-                    SpecialOffer = newOffer,
-                    EventId = Guid.NewGuid(),
-                    EventCreated = DateTimeOffset.Now
-                });
+            var @event = new SpecialOfferCreated
+            {
+                EventCreated = DateTimeOffset.Now,
+                EventId = Guid.NewGuid(),
+                SpecialOffer = newOffer
+            };
+            return _busMessageSender.SendMessageAsync(new ServiceBusMessage(JsonSerializer.Serialize(@event)));
         }
     }
 }

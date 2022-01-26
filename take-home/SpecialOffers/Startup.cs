@@ -1,4 +1,4 @@
-using EasyNetQ;
+using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,12 +9,9 @@ namespace SpecialOffers
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            var bus = RabbitHutch.CreateBus("host=rabbitmq");
-// Use this line when running outside docker:
-// var bus = RabbitHutch.CreateBus("host=localhost");
+            var bus = new ServiceBusClient("Endpoint=sb://streamingbus.servicebus.windows.net/;SharedAccessKeyName=SpecialOfferMicroservice;SharedAccessKey=WfN3DSuxi5hip6Qah9pxMd9In69SHj7uEhwhWlLeQks=;EntityPath=specialoffercreated");
             services
                 .AddSingleton(bus)
-                .AddSingleton(bus.PubSub)
                 .AddMvcCore();
             services.AddControllers();
             services.AddSwaggerGen();

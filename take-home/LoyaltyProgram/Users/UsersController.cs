@@ -14,7 +14,6 @@ namespace LoyaltyProgram.Users
         }
 
         [HttpGet("{userid:int}")]
-        [ResponseCache(Duration = 300)]
         public ActionResult<LoyaltyProgramUser> Get(int userId) =>
             (ActionResult<LoyaltyProgramUser>) _db.GetUserById(userId) ?? NotFound();
 

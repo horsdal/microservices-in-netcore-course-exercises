@@ -1,6 +1,5 @@
-using System;
 using System.Threading.Tasks;
-using EasyNetQ;
+using Azure.Messaging.ServiceBus;
 using LoyaltyProgram.SpecialOffers;
 using LoyaltyProgram.Users;
 using Microsoft.AspNetCore.Builder;
@@ -14,20 +13,27 @@ namespace LoyaltyProgram
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            var bus = RabbitHutch.CreateBus("host=localhost");
+            var bus = new ServiceBusClient("Endpoint=sb://streamingbus.servicebus.windows.net/;SharedAccessKeyName=LoyaltyProgrmaMicroservice;SharedAccessKey=pte9MidNO9jrd64D+w0/XOqRcXz6igThB0qD+jLqANg=;EntityPath=specialoffercreated");
             services
                 .AddSingleton(bus)
-                .AddSingleton(bus.PubSub)
                 .AddSingleton(new UserDb())
                 .AddHostedService<SpecialOffersConsumer>()
                 .AddMvcCore();
+            services.AddControllers();
+            services.AddSwaggerGen();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseMiddleware<RedirectingMiddleware>();
-            app.UseRouting();
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseMiddleware<RedirectingMiddleware>()
+                .UseSwagger()
+                .UseSwaggerUI(x =>
+                {
+                    x.SwaggerEndpoint("/swagger/v1/swagger.json", "Special Offer v1");
+                    x.RoutePrefix = string.Empty;
+                })
+                .UseRouting()
+                .UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 

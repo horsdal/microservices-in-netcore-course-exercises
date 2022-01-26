@@ -4,32 +4,27 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus;
 using Contracts.SpecialOffers;
-using EasyNetQ;
 using LoyaltyProgram.Users;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Polly;
 using Polly.Extensions.Http;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace LoyaltyProgram.SpecialOffers
 {
     public class SpecialOffersConsumer : IHostedService
     {
-        private readonly IPubSub _bus;
+        private readonly ServiceBusClient _bus;
         private readonly UserDb _db;
         private readonly ILogger<SpecialOffersConsumer> _logger;
-        private ISubscriptionResult _subscription;
+        private ServiceBusProcessor _messageProcessor;
         private readonly HttpClient _client;
 
-        private static readonly IAsyncPolicy<HttpResponseMessage> ExponentialRetrypolicy =
-            Policy<HttpResponseMessage>
-                .Handle<HttpRequestException>()
-                .OrTransientHttpStatusCode()
-                .WaitAndRetryAsync(3, x => TimeSpan.FromMilliseconds(100 * Math.Pow(2, x)));
-
-        public SpecialOffersConsumer(UserDb db, IPubSub bus, ILogger<SpecialOffersConsumer> logger)
+        public SpecialOffersConsumer(UserDb db, ServiceBusClient bus, ILogger<SpecialOffersConsumer> logger)
         {
             _db = db;
             _bus = bus;
@@ -42,30 +37,40 @@ namespace LoyaltyProgram.SpecialOffers
 
         public async Task StartAsync(CancellationToken ct)
         {
-            async Task OnMessage(SpecialOfferCreated offer)
+            _messageProcessor = _bus.CreateProcessor(nameof(SpecialOfferCreated), "LoyaltyProgramConsumer");
+            _messageProcessor.ProcessMessageAsync += args =>
             {
-                _logger.LogInformation("Received offer: {@SpecialOfferCreated}", offer);
-                var notifications = offer.SpecialOffer.Tags
-                    .SelectMany(w => _db.LookUpByTag(w))
-                    .Select(u =>
-                    {
-                        _logger.LogInformation("Send notification to {id}", u.Id);
-                        return
-                            ExponentialRetrypolicy.ExecuteAsync(() =>
-                                _client.PostAsync("/notifications", new StringContent(JsonConvert.SerializeObject(new {body = "Great Offer!", userId = u.Id.ToString()}), Encoding.UTF8, "application/json"))
-                        );
-                    });
-                var r = await Task.WhenAll(notifications);
-            }
-
-            _subscription = await
-                _bus.SubscribeAsync<SpecialOfferCreated>(nameof(SpecialOffersConsumer), OnMessage, cancellationToken: ct);
+                _logger.LogInformation("Received event: {@event}", args.Message);
+                return HandleSpecialOfferCreated(JsonSerializer.Deserialize<SpecialOfferCreated>(args.Message.Body));
+            };
+            _messageProcessor.ProcessErrorAsync += args =>
+            {
+                _logger.LogError(args.Exception, "Event processing failed", args);
+                return Task.CompletedTask;
+            };
+            await _messageProcessor.StartProcessingAsync(ct);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        private async Task HandleSpecialOfferCreated(SpecialOfferCreated offer)
         {
-            _subscription.Dispose();
-            return Task.CompletedTask;
+            _logger.LogInformation("Received offer: {@SpecialOfferCreated}", offer);
+            var notifications = offer.SpecialOffer.Tags
+                .SelectMany(w => _db.LookUpByTag(w))
+                .Select(u =>
+                {
+                    _logger.LogInformation("Send notification to {id}", u.Id);
+                    return _client.PostAsync("/notifications",
+                        new StringContent(
+                            JsonConvert.SerializeObject(new { body = "Great Offer!", userId = u.Id.ToString() }),
+                            Encoding.UTF8, "application/json"));
+                });
+            var r = await Task.WhenAll(notifications);
+        }
+
+        public async Task StopAsync(CancellationToken ct)
+        {
+            await _messageProcessor.StopProcessingAsync(ct);
+            await _messageProcessor.DisposeAsync();
         }
     }
 }
