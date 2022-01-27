@@ -29,15 +29,12 @@ namespace LoyaltyProgram.SpecialOffers
                 .OrTransientHttpStatusCode()
                 .WaitAndRetryAsync(3, x => TimeSpan.FromMilliseconds(100 * Math.Pow(2, x)));
 
-        public SpecialOffersConsumer(UserDb db, IPubSub bus, ILogger<SpecialOffersConsumer> logger)
+        public SpecialOffersConsumer(UserDb db, IPubSub bus, ILogger<SpecialOffersConsumer> logger, IHttpClientFactory httpClientFactory)
         {
             _db = db;
             _bus = bus;
             _logger = logger;
-            _client = new HttpClient
-            {
-                BaseAddress = new Uri("http://localhost:5001/")
-            };
+            _client = httpClientFactory.CreateClient("NotificationsClient");
         }
 
         public async Task StartAsync(CancellationToken ct)

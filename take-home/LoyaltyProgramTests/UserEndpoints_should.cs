@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -7,6 +8,7 @@ using LoyaltyProgram;
 using LoyaltyProgram.Users;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Xunit;
@@ -21,7 +23,8 @@ namespace LoyaltyProgramTests
         public UserEndpoints_should()
         {
             _host = new HostBuilder()
-                .ConfigureWebHost(x => x.UseStartup<Startup>().UseTestServer())
+                .ConfigureWebHost(x => x
+                    .UseStartup<Startup>().UseTestServer())
                 .Start();
             _sut = _host.GetTestClient();
         }
