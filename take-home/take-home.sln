@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Contracts\Cont
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoyaltyProgramTests", "LoyaltyProgramTests\LoyaltyProgramTests.csproj", "{704C6286-CBE5-4C98-8F91-F9B7F5A92E3D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationsContractTest", "NotificationsContractTest\NotificationsContractTest.csproj", "{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,18 @@ Global
 		{704C6286-CBE5-4C98-8F91-F9B7F5A92E3D}.Release|x64.Build.0 = Release|Any CPU
 		{704C6286-CBE5-4C98-8F91-F9B7F5A92E3D}.Release|x86.ActiveCfg = Release|Any CPU
 		{704C6286-CBE5-4C98-8F91-F9B7F5A92E3D}.Release|x86.Build.0 = Release|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Debug|x64.Build.0 = Debug|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Debug|x86.Build.0 = Debug|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Release|x64.ActiveCfg = Release|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Release|x64.Build.0 = Release|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Release|x86.ActiveCfg = Release|Any CPU
+		{6C5BAAD6-8E20-4B33-80CC-D15DE4A7EB3C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

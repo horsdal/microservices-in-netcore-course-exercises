@@ -93,7 +93,7 @@ namespace LoyaltyProgramTests
                     Tags = new[] { "Cycling", "Sports" }
                 }
             };
-            _bus.PubSub.PublishAsync(specialOffer);
+            await _bus.PubSub.PublishAsync(specialOffer);
         }
 
         public async void Dispose()
