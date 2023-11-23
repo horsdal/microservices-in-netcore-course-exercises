@@ -11,6 +11,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
+    <PackageReference Include="PactNet" Version="5.0.0-beta.1" />
+    <PackageReference Include="PactNet.Output.Xunit" Version="1.0.0" />
+    <PackageReference Include="InMemoryLogger" Version="1.0.66" />
   </ItemGroup>
 
   <ItemGroup>

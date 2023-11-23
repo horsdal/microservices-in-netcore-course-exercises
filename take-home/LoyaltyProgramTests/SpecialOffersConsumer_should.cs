@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Contracts.SpecialOffers;
 using EasyNetQ;
+using InMemLogger;
 using LoyaltyProgram;
 using LoyaltyProgram.Users;
 using LoyaltyProgramServiceTests.Mocks;
@@ -14,34 +15,45 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using PactNet;
+using PactNet.Exceptions;
+using PactNet.Infrastructure.Outputters;
+using PactNet.Matchers;
+using PactNet.Output.Xunit;
 using Polly;
 using Polly.Retry;
 using Xunit;
+using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace LoyaltyProgramTests;
 
 public class SpecialOffersConsumer_should : IDisposable
 {
+    private readonly ITestOutputHelper _output;
+
     private static readonly RetryPolicy ExponentialRetryPolicy =
         Policy
             .Handle<XunitException>()
             .WaitAndRetry(5, x => TimeSpan.FromMilliseconds(100 * Math.Pow(2, x)));
 
-    private MocksHost _serviceMock;
+    private IPactBuilderV4 _pactBuilder;
     private IHost _host;
     private IBus _bus;
     private HttpClient _sut;
 
-    private void StartMocks(string scenario)
+    public SpecialOffersConsumer_should(ITestOutputHelper output) => _output = output;
+
+    private void StartSut(Uri noticationsServiceUri)
     {
-        _serviceMock = new MocksHost(6001, scenario);
+        _bus = RabbitHutch.CreateBus("host=localhost");
+
         _host = new HostBuilder()
             .ConfigureWebHost(x => x
-                .ConfigureAppConfiguration(x => x.AddInMemoryCollection(new[] {new KeyValuePair<string, string>("notification_host",  "http://localhost:6001") } ))
+                .ConfigureAppConfiguration(x => x.AddInMemoryCollection(new[] {new KeyValuePair<string, string>("notification_host", noticationsServiceUri.ToString()) } ))
+                .ConfigureLogging(builder => builder.AddInMemory())
                 .UseStartup<Startup>().UseTestServer())
             .Start();
-        _bus = RabbitHutch.CreateBus("host=localhost");
         _sut = _host.GetTestClient();
     }
 
@@ -66,16 +78,33 @@ public class SpecialOffersConsumer_should : IDisposable
     [Fact]
     public async Task notify_eligible_user()
     {
-        StartMocks(nameof(notify_eligible_user));
-        await RegisterNewUser();
-        await CreateSpecialOffer();
-        AssertNotificationWasSent();
+        var pact = Pact.V4(nameof(notify_eligible_user), "Notifications", new PactConfig { PactDir = $"{Environment.CurrentDirectory}/../../../pacts", Outputters = new List<IOutput>(){ new XunitOutput(_output) } });
+        _pactBuilder = pact.WithHttpInteractions();
+        _pactBuilder
+            .UponReceiving("Command to send notification")
+                .WithRequest(HttpMethod.Post, "/notifications")
+                .WithJsonBody(new { body = Match.Type("string"), userId = Match.Integer(0)})
+            .WillRespond()
+                .WithStatus(HttpStatusCode.OK);
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            StartSut(ctx.MockServerUri);
+            var httpClient = new HttpClient();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            await RegisterNewUser();
+            await CreateSpecialOffer();
+            AssertNotificationWasSent();
+        });
     }
 
     private void AssertNotificationWasSent()
     {
+        InMemoryLogger logs = _host.Services.GetService(typeof(InMemoryLogger)) as InMemoryLogger;
         ExponentialRetryPolicy.Execute(() =>
-            Assert.True(NotificationsMock.ReceivedNotification));
+        {
+            Assert.Contains(logs.RecordedInformationLogs, l => l.Message.Contains("Send notification"));
+        });
     }
 
     private async Task CreateSpecialOffer()
@@ -99,7 +128,6 @@ public class SpecialOffersConsumer_should : IDisposable
 
     public async void Dispose()
     {
-        await (_serviceMock?.DisposeAsync() ?? ValueTask.CompletedTask);
         await _host?.StopAsync();
         _host?.Dispose();
         _sut?.Dispose();

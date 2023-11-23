@@ -44,15 +44,15 @@ public class SpecialOffersConsumer : IHostedService
             _logger.LogInformation("Received offer: {@SpecialOfferCreated}", offer);
             var notifications = offer.SpecialOffer.Tags
                 .SelectMany(w => _db.LookUpByTag(w))
-                .Select(u =>
+                .Select(async u =>
                 {
-                    _logger.LogInformation("Send notification to {id}", u.Id);
-                    return
+                    await
                         ExponentialRetrypolicy.ExecuteAsync(() =>
-                            _client.PostAsync("/notifications", new StringContent(JsonConvert.SerializeObject(new {body = "Great Offer!", userId = u.Id.ToString()}), Encoding.UTF8, "application/json"))
+                            _client.PostAsync("/notifications", new StringContent(JsonConvert.SerializeObject(new {body = "Great Offer!", userId = u.Id}), Encoding.UTF8, "application/json"))
                         );
+                    _logger.LogInformation("Send notification to {id}", u.Id);
                 });
-            var r = await Task.WhenAll(notifications);
+            await Task.WhenAll(notifications);
         }
 
         _subscription = await
